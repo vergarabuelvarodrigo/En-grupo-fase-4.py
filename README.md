@@ -37,7 +37,7 @@ Se ejecuta una demostracion automatica de **30 operaciones** (16 exitosas, 13 er
 - Gestor `SistemaFJ` con listas en memoria, validacion de documentos duplicados y deteccion de cruces de horario.
 - Demostracion inicial de 17 operaciones.
 
-### Liseth - Revision, correcciones y mejoras
+### liseth johana guillin medina - Revision, correcciones y mejoras
 **Correcciones**
 1. La tarifa base rechazaba un valor de exactamente 1 (`minimo=1` con `permitir_cero=False`); ahora acepta cualquier valor mayor que 0.
 2. Los atributos de los servicios (`capacidad`, `proyector`, `tipo_equipo`, `cantidad`, `especialidad`, `modalidad`) eran publicos y se podian modificar sin validar; ahora son privados con propiedades de solo lectura.
