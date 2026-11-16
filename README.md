@@ -29,7 +29,7 @@ Se ejecuta una demostracion automatica de **30 operaciones** (16 exitosas, 13 er
 
 ## Aportes por integrante
 
-### Integrante 1 (companero) - Desarrollo de la base del sistema
+### Rodrigo Vergara Buelvas - Desarrollo de la base del sistema
 - Jerarquia de excepciones personalizadas y funciones de validacion.
 - Configuracion del archivo de logs.
 - Clases `EntidadSistema`, `Cliente`, `Servicio` y los tres servicios especializados.
