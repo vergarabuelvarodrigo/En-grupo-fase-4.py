@@ -1,6 +1,6 @@
 """Sistema Integral de Gestion de Clientes, Servicios y Reservas - Software FJ.
 
-Proyecto academico de Programacion Orientada a Objetos.
+Proyecto academico de Programacion Orientada a Objetos (Curso 213023, UNAD).
 - No utiliza bases de datos: los datos se mantienen en listas y objetos.
 - Registra eventos y errores en software_fj.log.
 - Incluye una demostracion automatica con operaciones validas e invalidas.
@@ -26,3 +26,10 @@ if __name__ == "__main__":
     except Exception:
         registro.exception("Fallo no controlado en el punto de entrada.")
         print("Ocurrio un error inesperado. Revise software_fj.log para mas detalles.")
+    finally:
+        # Pausa final: evita que la ventana se cierre sola al abrir el archivo
+        # con doble clic. EOFError cubre el caso de ejecutarlo sin teclado.
+        try:
+            input("\nPresione Enter para cerrar el programa...")
+        except EOFError:
+            pass
