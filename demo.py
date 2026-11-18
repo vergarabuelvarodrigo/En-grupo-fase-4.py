@@ -1,5 +1,6 @@
 """Demostracion automatica de operaciones validas e invalidas."""
 
+# datetime para fechas y timedelta para sumar horas.
 from datetime import datetime, timedelta
 
 from excepciones import SistemaFJError
@@ -12,24 +13,28 @@ def ejecutar_operacion(numero, nombre, accion, resultados, logger):
     """Ejecuta una operacion aislada para que un fallo no detenga el programa.
 
     Incluye try/except/else/finally y registra exitos y fallos en el log.
+    En "resultados" se guarda "ok", "controlado" o "inesperado".
     """
     print(f"\nOPERACION {numero}: {nombre}")
     try:
+        # accion es una funcion sin parametros (lambda) con la operacion a probar.
         resultado = accion()
     except SistemaFJError as exc:
+        # Error previsto por el sistema (datos invalidos, estado incorrecto...).
         logger.error("Operacion %s (%s) controlada: %s", numero, nombre, exc)
-        print(f"ERROR CONTROLADO: {exc}")
-        resultados.append(False)
+        print(f"ERROR CONTROLADO ({type(exc).__name__}): {exc}")
+        resultados.append("controlado")
         return None
     except Exception as exc:
+        # Error no previsto (por ejemplo, un parametro que falta).
         logger.exception("Error inesperado en operacion %s (%s)", numero, nombre)
-        print(f"ERROR INESPERADO: {exc}")
-        resultados.append(False)
+        print(f"ERROR INESPERADO ({type(exc).__name__}): {exc}")
+        resultados.append("inesperado")
         return None
     else:
         logger.info("Operacion %s (%s) ejecutada correctamente.", numero, nombre)
         print(f"OK: {resultado}")
-        resultados.append(True)
+        resultados.append("ok")
         return resultado
     finally:
         print("Fin de la operacion.")
@@ -40,6 +45,7 @@ def ejecutar_demo(logger):
     """Ejecuta mas de diez operaciones, incluyendo pruebas validas e invalidas."""
     sistema = SistemaFJ(logger)
     resultados = []
+    logger.info("===== INICIO DE LA DEMOSTRACION =====")
 
     # Fechas futuras para que la demostracion funcione cualquier dia.
     manana = (datetime.now() + timedelta(days=1)).replace(
@@ -48,6 +54,9 @@ def ejecutar_demo(logger):
     pasado_manana = (datetime.now() + timedelta(days=2)).replace(
         hour=14, minute=0, second=0, microsecond=0
     )
+    en_tres_dias = (datetime.now() + timedelta(days=3)).replace(
+        hour=10, minute=0, second=0, microsecond=0
+    )
 
     print("=" * 72)
     print("SOFTWARE FJ - SISTEMA INTEGRAL DE CLIENTES, SERVICIOS Y RESERVAS")
@@ -55,13 +64,12 @@ def ejecutar_demo(logger):
     print("=" * 72)
 
     # 1. Registro correcto de cliente.
-    cliente = ejecutar_operacion(
+    ejecutar_operacion(
         1, "Registrar cliente valido",
         lambda: sistema.registrar_cliente(
             Cliente("Natalia Ejemplo", "CC1234567", "natalia@example.com", "3001234567")
         ), resultados, logger
     )
-    cliente_obj = sistema.clientes[0] if sistema.clientes else None
 
     # 2. Registro incorrecto de cliente: correo no valido.
     ejecutar_operacion(
@@ -103,10 +111,11 @@ def ejecutar_demo(logger):
         lambda: sistema.registrar_servicio(
             ServicioAsesoria(
                 "Asesoria Python", "Acompanamiento en programacion y desarrollo", 90000,
-                "Programacion", "virtual"
+                "Programacion", "presencial"
             )
         ), resultados, logger
     )
+    asesoria = sistema.servicios[-1] if len(sistema.servicios) >= 3 else None
 
     # 7. Rechazar un servicio mal formado (tarifa negativa).
     ejecutar_operacion(
@@ -118,7 +127,7 @@ def ejecutar_demo(logger):
 
     # 8. Crear una reserva correcta.
     reserva = None
-    if cliente_obj is not None and sala is not None:
+    if sala is not None:
         reserva = ejecutar_operacion(
             8, "Crear reserva valida de sala",
             lambda: sistema.crear_reserva("CC1234567", sala.id, 2, manana),
@@ -166,7 +175,8 @@ def ejecutar_demo(logger):
     if reserva_equipo is not None:
         ejecutar_operacion(
             14, "Cancelar reserva pendiente",
-            lambda: sistema.cancelar_reserva(reserva_equipo.id), resultados, logger
+            lambda: sistema.cancelar_reserva(reserva_equipo.id, "El cliente ya no la necesita"),
+            resultados, logger
         )
 
         # 15. No permitir confirmar una reserva cancelada.
@@ -190,21 +200,130 @@ def ejecutar_demo(logger):
             lambda: sala.calcular_costo_basico(2), resultados, logger
         )
 
+    # --- Operaciones agregadas en la revision ---
+
+    # 18. Duracion que supera el limite propio de la sala (12 h).
+    if sala is not None:
+        ejecutar_operacion(
+            18, "Rechazar reserva de sala por 20 horas (limite 12 h)",
+            lambda: sistema.crear_reserva("CC1234567", sala.id, 20, en_tres_dias),
+            resultados, logger
+        )
+
+    # 19. Servicio marcado como no disponible.
+    ejecutar_operacion(
+        19, "Registrar sala en mantenimiento (no disponible)",
+        lambda: sistema.registrar_servicio(
+            ServicioSala("Sala Mantenimiento", "Sala cerrada por remodelacion", 60000, 8,
+                         False, disponible=False)
+        ), resultados, logger
+    )
+    sala_cerrada = sistema.servicios[-1] if len(sistema.servicios) >= 4 else None
+    if sala_cerrada is not None:
+        ejecutar_operacion(
+            20, "Rechazar reserva de un servicio no disponible",
+            lambda: sistema.crear_reserva("CC1234567", sala_cerrada.id, 2, en_tres_dias),
+            resultados, logger
+        )
+
+    # 21. Cliente que no existe en el sistema.
+    if sala is not None:
+        ejecutar_operacion(
+            21, "Rechazar reserva de un cliente no registrado",
+            lambda: sistema.crear_reserva("CC0000000", sala.id, 2, en_tres_dias),
+            resultados, logger
+        )
+
+    # 22. Fecha en el pasado.
+    if sala is not None:
+        ejecutar_operacion(
+            22, "Rechazar reserva con fecha pasada",
+            lambda: sistema.crear_reserva(
+                "CC1234567", sala.id, 2, datetime.now() - timedelta(days=1)
+            ), resultados, logger
+        )
+
+    # 23. Cliente inactivo.
+    def registrar_y_desactivar():
+        # Se registra el cliente y luego se desactiva para probar la regla.
+        sistema.registrar_cliente(
+            Cliente("Pedro Inactivo", "CC9999999", "pedro@example.com", "3205550000")
+        )
+        cliente_nuevo = sistema.buscar_cliente("CC9999999")
+        cliente_nuevo.desactivar()
+        return cliente_nuevo.describir()
+
+    ejecutar_operacion(
+        23, "Registrar un segundo cliente y desactivarlo",
+        registrar_y_desactivar, resultados, logger
+    )
+    if sala is not None:
+        ejecutar_operacion(
+            24, "Rechazar reserva de un cliente inactivo",
+            lambda: sistema.crear_reserva("CC9999999", sala.id, 2, en_tres_dias),
+            resultados, logger
+        )
+
+    # 25-27. Calculo inconsistente: descuento fuera de rango y luego correcto.
+    reserva_asesoria = None
+    if asesoria is not None:
+        reserva_asesoria = ejecutar_operacion(
+            25, "Crear reserva de asesoria presencial (2 h)",
+            lambda: sistema.crear_reserva("CC1234567", asesoria.id, 2, en_tres_dias),
+            resultados, logger
+        )
+    if reserva_asesoria is not None:
+        ejecutar_operacion(
+            26, "Confirmar reserva de asesoria",
+            lambda: sistema.confirmar_reserva(reserva_asesoria.id), resultados, logger
+        )
+        ejecutar_operacion(
+            27, "Rechazar procesamiento con descuento del 150% (calculo inconsistente)",
+            lambda: sistema.procesar_reserva(reserva_asesoria.id, descuento=1.5),
+            resultados, logger
+        )
+        ejecutar_operacion(
+            28, "Procesar la misma reserva con datos correctos",
+            lambda: sistema.procesar_reserva(reserva_asesoria.id, descuento=0.05),
+            resultados, logger
+        )
+
+    # 29. Parametros faltantes: error inesperado que no detiene el programa.
+    ejecutar_operacion(
+        29, "Llamar a crear_reserva sin los parametros obligatorios",
+        lambda: sistema.crear_reserva("CC1234567"), resultados, logger
+    )
+
+    # 30. Polimorfismo: el mismo metodo da resultados distintos segun el servicio.
+    def comparar_servicios():
+        lineas = []
+        for servicio in (sala, equipo, asesoria):
+            costo = servicio.calcular_costo_con_impuesto(2)
+            lineas.append(f"{servicio.nombre}: ${costo['total']:,.2f}")
+        return " | ".join(lineas)
+
+    if sala is not None and equipo is not None and asesoria is not None:
+        ejecutar_operacion(
+            30, "Polimorfismo: costo de 2 horas con impuesto en cada servicio",
+            comparar_servicios, resultados, logger
+        )
+
+    # Resumen final.
     print("\n" + "=" * 72)
     print("RESUMEN FINAL DE LA DEMOSTRACION")
-    exitos = sum(resultados)
-    fallidas = len(resultados) - exitos
+    exitos = resultados.count("ok")
+    controlados = resultados.count("controlado")
+    inesperados = resultados.count("inesperado")
     print(f"Operaciones ejecutadas: {len(resultados)}")
     print(f"Operaciones exitosas:   {exitos}")
-    print(f"Operaciones con error controlado: {fallidas}")
+    print(f"Errores controlados:    {controlados}")
+    print(f"Errores inesperados:    {inesperados}")
     print(f"Clientes registrados:   {len(sistema.clientes)}")
     print(f"Servicios registrados:  {len(sistema.servicios)}")
     print(f"Reservas creadas:       {len(sistema.reservas)}")
-    print("Archivo de eventos y errores: software_fj.log")
-    print("El sistema termino la demostracion sin detenerse por los errores esperados.")
     print("=" * 72)
 
     logger.info(
-        "Demostracion finalizada. Operaciones: %s | Exitos: %s | Fallidas: %s",
-        len(resultados), exitos, fallidas
+        "Demostracion finalizada. Operaciones: %s | Exitos: %s | Controlados: %s | Inesperados: %s",
+        len(resultados), exitos, controlados, inesperados
     )
