@@ -1,4 +1,4 @@
-# Software FJ - Sistema Integral de Gestion de Clientes, Servicios y Reservas
+f# Software FJ - Sistema Integral de Gestion de Clientes, Servicios y Reservas
 
 Proyecto del curso **Programacion (213023)** - UNAD. Ejercicio 1 de la Fase 4.
 Sistema orientado a objetos, sin bases de datos, con manejo avanzado de excepciones y archivo de log.
@@ -29,9 +29,17 @@ Se ejecuta una demostracion automatica de **30 operaciones**: 16 exitosas, 13 er
 ## Aportes por integrante
 
 ### Rodrigo Jose Vergara Buelvas - version base
-- Excepciones personalizadas, validaciones y configuracion del log.
-- Clases `EntidadSistema`, `Cliente` y `Servicio`, y los tres servicios especializados.
-- Clase `Reserva` con estados, gestor `SistemaFJ` y demostracion inicial de 17 operaciones.
+
+Yo desarrollé la base del sistema. Empecé desde cero con la estructura del proyecto en Python.
+
+Mi aporte fue:
+- Crear las excepciones personalizadas en excepciones.py, para que el programa no se caiga y muestre errores claros, y configurar el archivo de log donde queda guardado todo.
+- Crear las validaciones en validaciones.py, para revisar que los textos, los números y los id estén bien escritos antes de guardarlos.
+- Crear las clases principales: EntidadSistema, Cliente y Servicio, con sus atributos privados y sus validaciones.
+- Crear los tres servicios especializados: Sala, Equipo y Asesoría, cada uno con sus propias reglas.
+- Crear la clase Reserva con sus estados, el gestor SistemaFJ que une a los clientes, servicios y reservas, y la demostración inicial de 17 operaciones.
+
+Lo hice de esta forma para que el sistema quedará ordenado por modulo, fuera fácil de entender y cumpliera con lo que pide la fase 4: poo, sin base de dato y con manejo avanzado de excepciones. 
 
 ### Liseth Johana Guillin Medina - revision, correcciones y mejoras
 Trabajo hecho en su propia rama, con un issue y un pull request hacia `main`.
