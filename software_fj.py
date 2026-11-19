@@ -1,3 +1,7 @@
+Proyecto En-grupo-fase-4-py
+# Aporte de Rodrigo Jose Vergara Buelvas: Base inicial dividida en módulos
+# Archivo principal que ejecuta el sistema
+
 """Sistema Integral de Gestion de Clientes, Servicios y Reservas - Software FJ.
 
 Proyecto academico de Programacion Orientada a Objetos (Curso 213023, UNAD).
