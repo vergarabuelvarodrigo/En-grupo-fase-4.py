@@ -249,3 +249,5 @@ class ServicioAsesoria(Servicio):
             f"Asesoria: {self.__especialidad} | Modalidad: {self.__modalidad} | "
             f"Tarifa base/hora: ${self._tarifa_base:,.0f}"
         )
+       # Revisado por Rodrigo Jose Vergara Buelvas - 19/11/2026
+# Revisión colaborativa: se verificó que los servicios y reser
